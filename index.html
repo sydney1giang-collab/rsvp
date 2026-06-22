@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RSVP</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  .rsvp-container { background: #515a3a; padding: 24px 20px 40px; }
+  html, body { background: #515a3a; margin: 0; padding: 0; min-height: 100vh; font-family: 'Montserrat', sans-serif; font-weight: 400; color: #ffffff; }
+  .page-title { font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 0.15em; text-transform: uppercase; color: #c8ccb8; text-align: center; margin-bottom: 6px; }
+  .page-sub { font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 22px; text-align: center; color: #ffffff; margin-bottom: 28px; font-style: italic; }
+  .divider { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; }
+  .divider::before, .divider::after { content: ''; flex: 1; height: 0.5px; background: #5c6b45; }
+  .divider span { font-size: 14px; color: #8a9670; }
+  label { display: block; font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 0.08em; color: #ffffff; margin-bottom: 6px; }
+  .field { margin-bottom: 20px; }
+  input[type="text"], input[type="number"], textarea { width: 100%; padding: 12px 14px; border: 1px solid #5c6b45; border-radius: 6px; font-size: 15px; font-family: 'Montserrat', sans-serif; font-weight: 400; color: #ffffff; background: #4a5a36; outline: none; transition: border-color 0.15s, box-shadow 0.15s; }
+  input[type="text"]::placeholder, textarea::placeholder { color: #8a9670; }
+  input[type="text"]:focus, input[type="number"]:focus, textarea:focus { border-color: #8a9670; box-shadow: 0 0 0 3px rgba(138,150,112,0.2); }
+  input[type="number"] { -moz-appearance: textfield; }
+  input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+  textarea { resize: vertical; min-height: 80px; }
+  .search-wrap { position: relative; }
+  .search-wrap input { padding-right: 36px; }
+  .clear-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 16px; color: #8a9670; display: none; line-height: 1; padding: 2px; }
+  .results { margin-top: 4px; border: 1px solid #5c6b45; border-radius: 6px; overflow: hidden; background: #4a5a36; display: none; box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
+  .result-item { padding: 12px 14px; font-size: 14px; cursor: pointer; color: #ffffff; border-bottom: 1px solid #5c6b45; display: flex; align-items: center; justify-content: space-between; gap: 10px; font-family: 'Montserrat', sans-serif; font-weight: 400; }
+  .result-item:last-child { border-bottom: none; }
+  .result-item:hover { background: #56683e; }
+  .result-count { font-size: 11px; color: #c8ccb8; background: #515a3a; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+  .result-status { font-size: 11px; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+  .result-status.yes { background: #2d3d1f; color: #a8c484; }
+  .result-status.no { background: #5a2a2a; color: #d4908a; }
+  .result-status.pending { background: #515a3a; color: #8a9670; }
+  mark { background: #6b7d50; color: #ffffff; border-radius: 2px; padding: 0 2px; font-style: normal; }
+  .no-results { padding: 12px 14px; font-size: 13px; color: #8a9670; text-align: center; font-style: italic; }
+  .rsvp-form { display: none; }
+  .rsvp-form.show { display: block; }
+  .guest-confirmed { background: #4a5a36; border: 1px solid #5c6b45; border-radius: 6px; padding: 12px 16px; margin-bottom: 20px; }
+  .guest-confirmed .gname { font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 17px; color: #ffffff; margin-bottom: 2px; }
+  .guest-confirmed .gmeta { font-size: 12px; color: #8a9670; letter-spacing: 0.05em; }
+  .attendance-row { display: flex; gap: 10px; }
+  .att-btn { flex: 1; padding: 12px; border: 1px solid #3b0f0f; border-radius: 6px; background: #3b0f0f; cursor: pointer; font-size: 14px; font-family: 'Montserrat', sans-serif; font-weight: 400; color: #c8ccb8; text-align: center; transition: all 0.15s; }
+  .att-btn:hover { background: #521a1a; border-color: #521a1a; }
+  .att-btn.selected-yes { background: #2d3d1f; border-color: #6b8a45; color: #a8c484; }
+  .att-btn.selected-no { background: #5a2a2a; border-color: #8b4a4a; color: #d4908a; }
+  .submit-btn { width: 100%; padding: 14px; background: #3b0f0f; color: #ffffff; border: none; border-radius: 30px; font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; font-family: 'Montserrat', sans-serif; font-weight: 700; transition: background 0.15s; margin-top: 8px; }
+  .submit-btn:hover { background: #521a1a; }
+  .error-msg { font-size: 12px; color: #d4908a; margin-top: 5px; display: none; }
+  .error-msg.show { display: block; }
+  .existing-rsvp { display: none; }
+  .existing-rsvp.show { display: block; }
+  .existing-card { background: #4a5a36; border: 1px solid #5c6b45; border-radius: 8px; overflow: hidden; margin-bottom: 16px; }
+  .existing-header { background: #515a3a; padding: 12px 16px; border-bottom: 1px solid #5c6b45; }
+  .existing-header .etitle { font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 16px; color: #ffffff; margin-bottom: 2px; }
+  .existing-header .esub { font-size: 12px; color: #8a9670; }
+  .conf-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 16px; border-bottom: 1px solid #5c6b45; gap: 12px; }
+  .conf-row:last-child { border-bottom: none; }
+  .conf-label { font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #8a9670; flex-shrink: 0; }
+  .conf-value { font-size: 14px; color: #ffffff; text-align: right; }
+  .conf-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-family: 'Montserrat', sans-serif; font-weight: 700; }
+  .conf-badge.yes { background: #2d3d1f; color: #a8c484; }
+  .conf-badge.no { background: #5a2a2a; color: #d4908a; }
+  .change-btn { width: 100%; padding: 11px; background: none; border: 1px solid #5c6b45; border-radius: 6px; font-size: 13px; font-family: 'Montserrat', sans-serif; font-weight: 400; color: #8a9670; cursor: pointer; text-align: center; transition: all 0.15s; }
+  .change-btn:hover { background: #4a5a36; border-color: #8a9670; color: #ffffff; }
+  .confirmation { display: none; }
+  .confirmation.show { display: block; }
+  .conf-icon { text-align: center; font-size: 32px; margin-bottom: 12px; }
+  .conf-title { text-align: center; font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 22px; font-style: italic; color: #ffffff; margin-bottom: 6px; }
+  .conf-sub { text-align: center; font-size: 13px; color: #8a9670; margin-bottom: 24px; letter-spacing: 0.05em; }
+  .conf-card { background: #4a5a36; border: 1px solid #5c6b45; border-radius: 8px; overflow: hidden; }
+  .loading-txt { font-size: 12px; color: #8a9670; font-style: italic; text-align: center; padding: 8px 0; display: none; }
+</style>
+</head>
+<body>
+
+<div class="rsvp-container">
+<p class="page-title">RSVP</p>
+
+<div class="divider"><span>✦</span></div>
+
+<div id="search-section">
+  <div class="field">
+    <label for="gs">Find your name</label>
+    <div class="search-wrap">
+      <input type="text" id="gs" placeholder="Start typing your name…" autocomplete="off" />
+      <button class="clear-btn" id="clr" aria-label="Clear search">✕</button>
+    </div>
+    <div class="results" id="res"></div>
+    <div class="loading-txt" id="load-txt">Checking responses…</div>
+  </div>
+</div>
+
+<!-- Existing RSVP view -->
+<div class="existing-rsvp" id="existing-rsvp">
+  <div class="existing-card">
+    <div class="existing-header">
+      <div class="etitle" id="ex-name"></div>
+      <div class="esub">Your RSVP is on file</div>
+    </div>
+    <div class="conf-row"><span class="conf-label">Attendance</span><span class="conf-value" id="ex-att"></span></div>
+    <div class="conf-row"><span class="conf-label">Guests confirmed</span><span class="conf-value" id="ex-count"></span></div>
+    <div class="conf-row"><span class="conf-label">Dietary notes</span><span class="conf-value" id="ex-diet"></span></div>
+    <div class="conf-row"><span class="conf-label">Submitted</span><span class="conf-value" id="ex-time"></span></div>
+  </div>
+  <button class="change-btn" onclick="showFormToUpdate()">Need to make a change? Update your RSVP</button>
+</div>
+
+<!-- New / update RSVP form -->
+<div class="rsvp-form" id="rsvp-form">
+  <div class="guest-confirmed" id="guest-banner">
+    <div class="gname" id="banner-name"></div>
+    <div class="gmeta" id="banner-meta"></div>
+  </div>
+  <div class="field">
+    <label for="guest-count">Number of guests attending</label>
+    <input type="number" id="guest-count" min="0" max="20" />
+  </div>
+  <div class="field">
+    <label>Will you be attending?</label>
+    <div class="attendance-row">
+      <button class="att-btn" id="btn-yes" onclick="setAttendance('yes')">✓  Joyfully accepts</button>
+      <button class="att-btn" id="btn-no" onclick="setAttendance('no')">✗  Regretfully declines</button>
+    </div>
+    <div class="error-msg" id="att-error">Please let us know if you can attend.</div>
+  </div>
+  <div class="field">
+    <label for="dietary">Dietary restrictions or notes</label>
+    <textarea id="dietary" placeholder="Vegetarian, gluten-free, allergies, etc. Leave blank if none."></textarea>
+  </div>
+  <button class="submit-btn" onclick="submitRSVP()">Confirm RSVP</button>
+</div>
+
+<div class="confirmation" id="confirmation">
+  <div class="conf-icon">✉</div>
+  <div class="conf-title">You're all set</div>
+  <div class="conf-sub">Thank you — we can't wait to celebrate with you</div>
+  <div class="conf-card" id="conf-card"></div>
+</div>
+
+<script>
+// ---- GUEST LIST ----
+var guests = [
+  { name: "Kaitlyn & Javi", count: 2 },
+  { name: "Quyen Au & Conway Giang", count: 2 },
+  { name: "Anh Luc", count: 1 },
+  { name: "Ha Duong & Minh Luc", count: 2 },
+  { name: "San Luc & Ngoc Tran", count: 2 },
+  { name: "Phuong Tran", count: 1 },
+  { name: "Phat Hang & Anh Tuc Au", count: 2 },
+  { name: "Mr. & Mrs. Xung Luc", count: 2 },
+  { name: "Tuan Au & Lesha Luu", count: 2 },
+  { name: "Jenny & Jason", count: 2 },
+  { name: "Calvin & Mai", count: 3 },
+  { name: "Justine & Michael", count: 2 },
+  { name: "Thuy Au & Tom Ngo", count: 2 },
+  { name: "Andy Ngo", count: 1 },
+  { name: "Amanda & Petrus", count: 4 },
+  { name: "Connie Au & Richard Luu & Karen", count: 3 },
+  { name: "Shannon & Marcus", count: 2 },
+  { name: "Dylan & Chloe", count: 2 },
+  { name: "Tiffany Au & Gogo Luong", count: 2 },
+  { name: "Vincent & Serene", count: 2 },
+  { name: "Steven & Sierra", count: 2 },
+  { name: "Kendrick & Gabe", count: 1 },
+  { name: "Uncle Andy & Kiely", count: 2 },
+  { name: "Kristine Au & Kevin Ho", count: 5 },
+  { name: "Steve & Nancy Ou", count: 4 },
+  { name: "Yin Luong", count: 1 },
+  { name: "Sharon & Nick", count: 2 },
+  { name: "Connie & Mark", count: 5 },
+  { name: "Mr. & Mrs. Minh Giang", count: 2 },
+  { name: "Phuong & Hoa Ho", count: 2 },
+  { name: "Man Giang", count: 1 },
+  { name: "Pauline & Alvin Han", count: 2 },
+  { name: "Collan & Laura", count: 2 },
+  { name: "Kendrick Han", count: 1 },
+  { name: "Mr. & Mrs. Vinh Giang", count: 2 },
+  { name: "Stephanie & Brandon", count: 2 },
+  { name: "Vanessa & Thai Tran", count: 2 },
+  { name: "Diana & Jon Escobar", count: 4 },
+  { name: "Johnny & Lanphi Tran", count: 4 },
+  { name: "Christina & Guest", count: 2 },
+  { name: "Khang Giang & Dung Dang", count: 4 },
+  { name: "Nolan Giang & Trang Bo", count: 2 },
+  { name: "Priscilla & Guest", count: 2 },
+  { name: "Nathan & Guest", count: 2 },
+  { name: "Ho Lam & Nga Chau", count: 2 },
+  { name: "Chanh & Huey Mach", count: 2 },
+  { name: "Thong Tran & Thao Do", count: 2 },
+  { name: "Tuong Hien & Thanh Vuong", count: 2 },
+  { name: "Dong Phan & Thuy Lam", count: 2 },
+  { name: "Tuan Giang", count: 1 },
+  { name: "My Linh Hien", count: 1 },
+  { name: "Eva Ly", count: 1 },
+  { name: "Nhan Su & Chau Luc", count: 2 },
+  { name: "Mr. & Mrs. Hong Tran", count: 2 },
+  { name: "Huong Dang", count: 1 },
+  { name: "Quy Hang & Trinh Do", count: 2 },
+  { name: "Danny, Amy, Hansen & Eisen Hy", count: 4 },
+  { name: "Anna & Marc Hsu", count: 2 },
+  { name: "Cindy Choy & Kendall Young", count: 3 },
+  { name: "Laurie Young & David Lee", count: 2 },
+  { name: "Michael Li & Guest", count: 2 },
+  { name: "Lillian Choy & Ronald Yeung", count: 2 },
+  { name: "Floris & Michael", count: 2 },
+  { name: "Calvin & Jade", count: 4 },
+  { name: "Lawrence & Sophia", count: 4 },
+  { name: "Vivian & Curtis Chinn", count: 4 },
+  { name: "Anna & Randy Wu", count: 2 },
+  { name: "Avery & April Foster-Wu", count: 4 },
+  { name: "Crystal & Wilson", count: 2 },
+  { name: "Terrance & Guest", count: 2 },
+  { name: "Anthony & Verna Wong", count: 4 },
+  { name: "Leo Choy", count: 1 },
+  { name: "Stephen & Roshan", count: 2 },
+  { name: "Henry & Ella Young", count: 2 },
+  { name: "Francis & Raymond Tam", count: 2 },
+  { name: "Charling Tam", count: 1 },
+  { name: "Renee & Pauline Louie", count: 2 },
+  { name: "Jason & Guest", count: 4 },
+  { name: "Leon & Emily", count: 2 },
+  { name: "Emily & Vince", count: 2 },
+  { name: "Amy & Carlos", count: 2 },
+  { name: "Amanda & Andrew", count: 2 },
+  { name: "Jashan & Jospeh", count: 2 },
+  { name: "Kathleen & Michael", count: 2 },
+  { name: "Fairy & Sam", count: 2 },
+  { name: "Nahshon & Majah", count: 2 },
+  { name: "Eddie Viera", count: 1 },
+  { name: "Lauren & Steven", count: 2 },
+  { name: "Kim & Tristan", count: 2 },
+  { name: "Jacob & Charlotte", count: 2 },
+  { name: "Faustine & Matthew", count: 2 },
+  { name: "AJ & Krish", count: 2 },
+  { name: "Joyce & Eric", count: 2 },
+  { name: "Chris & Nay", count: 2 },
+  { name: "Brandon & Sydney", count: 2 },
+  { name: "Andy & Heaven", count: 2 },
+  { name: "Sir & Audrey", count: 2 },
+  { name: "Jaime & Patrick", count: 2 },
+  { name: "Reggie & Tiffany", count: 2 },
+  { name: "Anh T. Hoang", count: 2 },
+  { name: "Helen Bui", count: 1 },
+  { name: "Eva Mai", count: 1 },
+  { name: "Gary & Lani Belen", count: 2 },
+  { name: "Harrison & Michelle", count: 2 },
+  { name: "Darren & Sabrina", count: 2 },
+  { name: "Andrew Bakewell", count: 1 },
+  { name: "Nick & Tori", count: 2 },
+  { name: "Tung & Han", count: 2 },
+  { name: "Jennifer & Chris", count: 2 },
+  { name: "Vivienne & Jeff", count: 2 },
+  { name: "Tammy Tran", count: 1 }
+];
+
+// ---- RESPONSES SHEET CSV ----
+var RESPONSES_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRy_qcZ6Se71QncH5jiCBlPrkFJWlEG4LpkW0qoHWflRBAR5Q4jJlgfUVqKCLtnHmrCTr_2A0g9ubGg/pub?output=csv';
+
+// ---- GOOGLE FORM SUBMIT ----
+var FORM_ACTION = 'https://docs.google.com/forms/d/e/1FAIpQLSfCmkU9spRPNd5d_nXCSYsQolt8OIz40mvbZIWVDU2_mNRuzQ/formResponse';
+var FIELDS = { name: 'entry.1429964206', attendance: 'entry.1778383418', guests: 'entry.641952311', dietary: 'entry.1726315035' };
+
+var selected = null;
+var attendance = null;
+var responses = null;
+var gsEl = document.getElementById('gs');
+var resEl = document.getElementById('res');
+var clrEl = document.getElementById('clr');
+
+// Parse CSV into array of objects
+function parseCSV(text) {
+  var lines = text.trim().split('\n');
+  if (lines.length < 2) return [];
+  var headers = lines[0].split(',').map(function(h) { return h.replace(/^"|"$/g,'').trim(); });
+  var result = [];
+  for (var i = 1; i < lines.length; i++) {
+    var cols = splitCSVRow(lines[i]);
+    var row = {};
+    headers.forEach(function(h, idx) { row[h] = cols[idx] ? cols[idx].replace(/^"|"$/g,'').trim() : ''; });
+    result.push(row);
+  }
+  return result;
+}
+
+function splitCSVRow(row) {
+  var result = [], cur = '', inQ = false;
+  for (var i = 0; i < row.length; i++) {
+    if (row[i] === '"') { inQ = !inQ; }
+    else if (row[i] === ',' && !inQ) { result.push(cur); cur = ''; }
+    else { cur += row[i]; }
+  }
+  result.push(cur);
+  return result;
+}
+
+function loadResponses(cb) {
+  if (responses !== null) { cb(responses); return; }
+  fetch(RESPONSES_CSV)
+    .then(function(r) { return r.text(); })
+    .then(function(text) { responses = parseCSV(text); cb(responses); })
+    .catch(function() { responses = []; cb([]); });
+}
+
+function findResponse(name) {
+  if (!responses) return null;
+  var nl = name.toLowerCase();
+  // Find most recent response for this name
+  var matches = responses.filter(function(r) {
+    var rname = (r['Full Name'] || '').toLowerCase();
+    return rname === nl;
+  });
+  return matches.length ? matches[matches.length - 1] : null;
+}
+
+function score(q, t) {
+  q = q.toLowerCase(); t = t.toLowerCase();
+  if (t.includes(q)) return 1 + q.length / t.length;
+  var i = 0, s = 0, l = -1;
+  for (var j = 0; j < t.length && i < q.length; j++) {
+    if (t[j] === q[i]) { s += (l !== -1 && j - l === 1) ? 2 : 1; l = j; i++; }
+  }
+  return i < q.length ? 0 : s / (t.length + q.length);
+}
+
+function hl(q, t) {
+  q = q.toLowerCase();
+  var idx = [], qi = 0;
+  for (var i = 0; i < t.length; i++)
+    if (qi < q.length && t[i].toLowerCase() === q[qi]) { idx.push(i); qi++; }
+  var out = '', inm = false;
+  for (var i = 0; i < t.length; i++) {
+    if (idx.indexOf(i) > -1) { if (!inm) { out += '<mark>'; inm = true; } out += t[i]; }
+    else { if (inm) { out += '</mark>'; inm = false; } out += t[i]; }
+  }
+  return inm ? out + '</mark>' : out;
+}
+
+gsEl.addEventListener('input', function() {
+  var raw = gsEl.value;
+  var q = raw.trim();
+  clrEl.style.display = raw ? 'block' : 'none';
+  hideAll();
+  if (!q || raw.indexOf(' ') === -1) { resEl.style.display = 'none'; return; }
+  var ql = q.toLowerCase();
+  var hits = guests
+    .filter(function(g) { return g.name.toLowerCase().indexOf(ql) > -1; })
+    .map(function(g) { return { g: g, s: 1 }; })
+    .slice(0, 8);
+  if (!hits.length) {
+    resEl.innerHTML = '<div class="no-results">No matches found — try a different spelling</div>';
+    resEl.style.display = 'block'; return;
+  }
+  // Load responses to show status badges
+  document.getElementById('load-txt').style.display = 'block';
+  loadResponses(function(rsvps) {
+    document.getElementById('load-txt').style.display = 'none';
+    resEl.innerHTML = hits.map(function(x) {
+      var existing = findResponse(x.g.name);
+      var badge = '';
+      if (existing) {
+        var att = (existing['Attendance'] || '').toLowerCase();
+        var cls = att.indexOf('accept') > -1 ? 'yes' : att.indexOf('declin') > -1 ? 'no' : 'pending';
+        var label = att.indexOf('accept') > -1 ? 'RSVP\'d ✓' : att.indexOf('declin') > -1 ? 'Declined' : 'Responded';
+        badge = '<span class="result-status ' + cls + '">' + label + '</span>';
+      } else {
+        badge = '<span class="result-count">' + x.g.count + ' guest' + (x.g.count !== 1 ? 's' : '') + '</span>';
+      }
+      var safeName = x.g.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+      return '<div class="result-item" onclick="selectGuest(\'' + safeName + '\')">' +
+        '<span>' + hl(q, x.g.name) + '</span>' + badge + '</div>';
+    }).join('');
+    resEl.style.display = 'block';
+  });
+});
+
+clrEl.addEventListener('click', function() {
+  gsEl.value = ''; resEl.style.display = 'none';
+  clrEl.style.display = 'none'; gsEl.focus();
+  hideAll(); selected = null; attendance = null;
+});
+
+function hideAll() {
+  document.getElementById('rsvp-form').classList.remove('show');
+  document.getElementById('existing-rsvp').classList.remove('show');
+  document.getElementById('confirmation').classList.remove('show');
+}
+
+function selectGuest(name) {
+  selected = guests.find(function(g) { return g.name === name; });
+  if (!selected) return;
+  gsEl.value = name;
+  resEl.style.display = 'none';
+  clrEl.style.display = 'block';
+  hideAll();
+
+  var existing = findResponse(name);
+  if (existing) {
+    showExistingRSVP(existing);
+  } else {
+    showNewForm();
+  }
+}
+
+function showExistingRSVP(r) {
+  var att = r['Attendance'] || '';
+  var cls = att.toLowerCase().indexOf('accept') > -1 ? 'yes' : 'no';
+  document.getElementById('ex-name').textContent = r['Full Name'] || selected.name;
+  document.getElementById('ex-att').innerHTML = '<span class="conf-badge ' + cls + '">' + att + '</span>';
+  document.getElementById('ex-count').textContent = (r['Number of Guests'] || '—') + ' guest' + (r['Number of Guests'] !== '1' ? 's' : '');
+  document.getElementById('ex-diet').textContent = r['Dietary Notes'] || 'None';
+  var ts = r['Timestamp'] || '';
+  if (ts) {
+    try { ts = new Date(ts).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }); } catch(e) {}
+  }
+  document.getElementById('ex-time').textContent = ts || '—';
+  document.getElementById('existing-rsvp').classList.add('show');
+  document.getElementById('existing-rsvp').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function showNewForm() {
+  document.getElementById('banner-name').textContent = selected.name;
+  document.getElementById('banner-meta').textContent = selected.count + ' guest' + (selected.count !== 1 ? 's' : '') + ' on the list';
+  document.getElementById('guest-count').value = selected.count;
+  attendance = null;
+  document.getElementById('btn-yes').className = 'att-btn';
+  document.getElementById('btn-no').className = 'att-btn';
+  document.getElementById('att-error').classList.remove('show');
+  document.getElementById('dietary').value = '';
+  document.getElementById('rsvp-form').classList.add('show');
+  document.getElementById('rsvp-form').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function showFormToUpdate() {
+  document.getElementById('existing-rsvp').classList.remove('show');
+  showNewForm();
+}
+
+function setAttendance(val) {
+  attendance = val;
+  document.getElementById('btn-yes').className = 'att-btn' + (val === 'yes' ? ' selected-yes' : '');
+  document.getElementById('btn-no').className = 'att-btn' + (val === 'no' ? ' selected-no' : '');
+  document.getElementById('att-error').classList.remove('show');
+}
+
+function submitRSVP() {
+  if (!attendance) { document.getElementById('att-error').classList.add('show'); return; }
+  var count = parseInt(document.getElementById('guest-count').value) || 0;
+  var dietary = document.getElementById('dietary').value.trim();
+  var attendanceText = attendance === 'yes' ? 'Joyfully accepts' : 'Regretfully declines';
+
+  var formData = new FormData();
+  formData.append(FIELDS.name, selected.name);
+  formData.append(FIELDS.attendance, attendanceText);
+  formData.append(FIELDS.guests, count);
+  formData.append(FIELDS.dietary, dietary || 'None');
+  fetch(FORM_ACTION, { method: 'POST', mode: 'no-cors', body: formData }).catch(function() {});
+
+  // Reset cached responses so next lookup reflects new submission
+  responses = null;
+
+  var rows = [
+    { label: 'Name', value: selected.name },
+    { label: 'Attendance', value: '<span class="conf-badge ' + attendance + '">' + attendanceText + '</span>' },
+    { label: 'Guests confirmed', value: count + ' guest' + (count !== 1 ? 's' : '') },
+    { label: 'Dietary notes', value: dietary || 'None' }
+  ];
+  document.getElementById('conf-card').innerHTML = rows.map(function(r) {
+    return '<div class="conf-row"><span class="conf-label">' + r.label + '</span><span class="conf-value">' + r.value + '</span></div>';
+  }).join('');
+  document.getElementById('search-section').style.display = 'none';
+  hideAll();
+  document.getElementById('rsvp-form').style.display = 'none';
+  document.getElementById('confirmation').classList.add('show');
+}
+</script>
+</div>
+</body>
+</html>
