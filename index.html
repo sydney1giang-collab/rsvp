@@ -8,7 +8,7 @@
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   .rsvp-container { background: #515a3a; border-radius: 16px; padding: 24px 20px 40px; width: 100%; min-height: 600px; }
-  html, body { background: transparent; margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; font-weight: 400; color: #ffffff; }
+  body { background: transparent; margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; font-weight: 400; color: #ffffff; }
   .page-title { font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 26px; letter-spacing: 0.15em; text-transform: uppercase; color: #c8ccb8; text-align: center; margin-bottom: 6px; }
   .page-sub { font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 22px; text-align: center; color: #ffffff; margin-bottom: 28px; font-style: italic; }
   .divider { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; }
@@ -377,6 +377,7 @@ gsEl.addEventListener('input', function() {
 });
 
 clrEl.addEventListener('click', function() {
+  document.querySelector('.rsvp-container').style.minHeight = '600px';
   gsEl.value = ''; resEl.style.display = 'none';
   clrEl.style.display = 'none'; gsEl.focus();
   hideAll(); selected = null; attendance = null;
@@ -389,6 +390,7 @@ function hideAll() {
 }
 
 function selectGuest(name) {
+  document.querySelector('.rsvp-container').style.minHeight = '900px';
   selected = guests.find(function(g) { return g.name === name; });
   if (!selected) return;
   gsEl.value = name;
