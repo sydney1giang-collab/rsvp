@@ -347,7 +347,7 @@ gsEl.addEventListener('input', function() {
   var q = raw.trim();
   clrEl.style.display = raw ? 'block' : 'none';
   hideAll();
-  if (!q || raw.indexOf(' ') === -1) { resEl.style.display = 'none'; return; }
+  if (!q) { resEl.style.display = 'none'; return; }
   var ql = q.toLowerCase();
   var hits = guests
     .filter(function(g) { return g.name.toLowerCase().indexOf(ql) > -1; })
